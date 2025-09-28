@@ -10,6 +10,8 @@ import PhotoCard from './components/PhotoCard';
 import { createAlbumPage } from './lib/albumUtils';
 import Footer from './components/Footer';
 import PolaroidCard from './components/PolaroidCard';
+import { AuthProvider, useAuth } from './lib/AuthContext';
+import UserProfile from './components/UserProfile';
 
 const MAX_MAIN_IMAGES = 10;
 const MAX_INSPIRATION_IMAGES = 5;
@@ -207,7 +209,8 @@ const ApiKeyPrompt = ({ onApiKeySubmit }: { onApiKeySubmit: (key: string) => voi
     );
 };
 
-function App() {
+function AppContent() {
+    const { currentUser } = useAuth();
     const [isApiKeySet, setIsApiKeySet] = useState(false);
     const [uploadedImages, setUploadedImages] = useState<string[]>([]);
     const [inspirationImages, setInspirationImages] = useState<string[]>([]);
@@ -515,8 +518,40 @@ function App() {
 
     const isGenerateButtonDisabled = uploadedImages.length === 0 || inspirationImages.length === 0 || appState === 'generating';
 
+    // Show login prompt if user is not authenticated
+    if (!currentUser) {
+        return (
+            <main className="bg-gradient-to-br from-pink-400 via-purple-500 to-orange-500 text-white min-h-screen w-full flex flex-col items-center justify-center p-4 overflow-y-auto">
+                <div className="z-10 flex flex-col items-center justify-center w-full h-full flex-1 text-center p-4">
+                    <motion.h1 
+                        className="text-7xl md:text-9xl font-bold mb-8"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5 }}
+                    >
+                        Perfect Shot
+                    </motion.h1>
+                    <motion.p 
+                        className="text-neutral-200 mb-8 text-xl tracking-wide max-w-lg"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.1 }}
+                    >
+                        Please sign in to unlock your perfect photos, effortlessly.
+                    </motion.p>
+                    <UserProfile />
+                </div>
+            </main>
+        );
+    }
+
     return (
         <main className="bg-gradient-to-br from-pink-400 via-purple-500 to-orange-500 text-white min-h-screen w-full flex flex-col items-center justify-center p-4 pb-24 overflow-y-auto">
+            {/* Header with User Profile */}
+            <div className="absolute top-4 right-4 z-20">
+                <UserProfile />
+            </div>
+            
             <AnimatePresence>
                 {!isApiKeySet && <ApiKeyPrompt onApiKeySubmit={handleApiKeySubmit} />}
             </AnimatePresence>
@@ -767,6 +802,14 @@ function App() {
                 </>
             )}
         </main>
+    );
+}
+
+function App() {
+    return (
+        <AuthProvider>
+            <AppContent />
+        </AuthProvider>
     );
 }
 
